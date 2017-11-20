@@ -3,7 +3,7 @@
 .PHONY: all clean buttons
 
 X64 = x64sc
-D64_IMAGE = "bin/chipdisk-nac.d64"
+D64_IMAGE = "bin/chipdisk-br.d64"
 C1541 = c1541
 
 all: easteregg_txt easteregg chipdisk decrunch_chipdisk intro run

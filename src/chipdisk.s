@@ -1907,7 +1907,7 @@ song_table_freq_addrs_lo:
         .addr $1404                             ; easteregg song
 
 song_table_freq_addrs_hi:
-        .addr $1760
+        .addr $1494
         .addr $1783
         .addr $15e4
         .addr $14bb
@@ -1917,7 +1917,6 @@ song_table_freq_addrs_hi:
 timer_speed:
         .addr $4cc7                             ; default: PAL 50.125hz
 
-song_5_end_of_data:
 song_durations:                                 ; measured in "cycles ticks"
         .word (4*60+07+3) * 50                ; #1 4:07
         .word (3*60+26+1) * 50                ; #2 3:26
