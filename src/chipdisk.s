@@ -1899,30 +1899,30 @@ song_end_addrs:
         .addr song_5_end_of_data
 
 song_table_freq_addrs_lo:
-        .addr $1700
+        .addr $15b1
+        .addr $16fd
         .addr $17eb
-        .addr $164c
-        .addr $151b
-        .addr $151b
-        .addr $1404                             ; easteregg song
+        .addr $16ea
+        .addr $15b1
+        .addr $15b1                             ; easteregg song
 
 song_table_freq_addrs_hi:
-        .addr $1494
+        .addr $1611
+        .addr $175d
         .addr $1783
-        .addr $15e4
-        .addr $14bb
-        .addr $14bb
-        .addr $1464                             ; easteregg song
+        .addr $1682
+        .addr $1611
+        .addr $1611                             ; easteregg song
 
 timer_speed:
         .addr $4cc7                             ; default: PAL 50.125hz
 
 song_durations:                                 ; measured in "cycles ticks"
-        .word (4*60+07+3) * 50                ; #1 4:07
-        .word (3*60+26+1) * 50                ; #2 3:26
-        .word (3*60+13+2) * 50                ; #3 3:13
-        .word (4*60+18+1) * 50                ; #4 4:18
-        .word (4*60+30+3) * 50                ; #5 4:30
+        .word (4*60+07+3) * 50                  ; #1 4:07
+        .word (3*60+26+1) * 50                  ; #2 3:26
+        .word (3*60+13+2) * 50                  ; #3 3:13
+        .word (4*60+18+1) * 50                  ; #4 4:18
+        .word (4*60+30+3) * 50                  ; #5 4:30
 
 
 song_name_empty:
