@@ -1275,7 +1275,7 @@ f1_pressed:
 
         inc $01
 
-        lda #9                                  ; current song: 9
+        lda #TOTAL_SONGS                        ; current song (last song + 1 - 1)
         sta current_song                        ; needed to update the freq table
         jsr update_freq_table                   ; correctly
 
@@ -1874,17 +1874,13 @@ buttons_pos:
         .endrepeat
 
 ; song order
-; 1, 2, 3, 4, 5, 6, 7, 8, 9
+; 1, 2, 3, 4, 5
 song_names:
         .addr song_1_name
         .addr song_2_name
         .addr song_3_name
         .addr song_4_name
         .addr song_5_name
-        .addr song_6_name
-        .addr song_7_name
-        .addr song_8_name
-        .addr song_9_name
 TOTAL_SONGS = (* - song_names) / 2
 
 
@@ -1894,10 +1890,6 @@ song_authors:
         .addr song_3_author
         .addr song_4_author
         .addr song_5_author
-        .addr song_6_author
-        .addr song_7_author
-        .addr song_8_author
-        .addr song_9_author
 
 song_end_addrs:
         .addr song_1_end_of_data
@@ -1905,10 +1897,6 @@ song_end_addrs:
         .addr song_3_end_of_data
         .addr song_4_end_of_data
         .addr song_5_end_of_data
-        .addr song_6_end_of_data
-        .addr song_7_end_of_data
-        .addr song_8_end_of_data
-        .addr song_9_end_of_data
 
 song_table_freq_addrs_lo:
         .addr $1700
@@ -1916,10 +1904,6 @@ song_table_freq_addrs_lo:
         .addr $164c
         .addr $151b
         .addr $151b
-        .addr $151b
-        .addr $16ea
-        .addr $17eb
-        .addr $1779
         .addr $1404                             ; easteregg song
 
 song_table_freq_addrs_hi:
@@ -1928,35 +1912,18 @@ song_table_freq_addrs_hi:
         .addr $15e4
         .addr $14bb
         .addr $14bb
-        .addr $14bb
-        .addr $1682
-        .addr $1783
-        .addr $1711
         .addr $1464                             ; easteregg song
 
 timer_speed:
         .addr $4cc7                             ; default: PAL 50.125hz
 
-
-;Seguir viviendo sin tu amor 2:45
-;Ultimo Tango en Paris 1:46
-;Amor clasificado 5:11
-;Hacelo por mi 3:25
-;Mujer amante 5:28
-;Juana Azurduy reggae mix 2:28
-;Loco un poco 3:13
-;Masticar 1:47
-;Prófugos 5:19
+song_5_end_of_data:
 song_durations:                                 ; measured in "cycles ticks"
-        .word (2*60+45+3) * 50                ; #1 2:45
-        .word (1*60+46+1) * 50                ; #2 1:46
-        .word (5*60+11+2) * 50                ; #3 5:11
-        .word (3*60+25+1) * 50                ; #4 3:25
-        .word (5*60+28+3) * 50                ; #5 5:28
-        .word (2*60+28+2) * 50                ; #6 2:28
-        .word (3*60+13+6) * 50                ; #7 3:13
-        .word (1*60+47+1) * 50                ; #8 1:47
-        .word (5*60+19+3) * 50                ; #9 5:19
+        .word (4*60+07+3) * 50                ; #1 4:07
+        .word (3*60+26+1) * 50                ; #2 3:26
+        .word (3*60+13+2) * 50                ; #3 3:13
+        .word (4*60+18+1) * 50                ; #4 4:18
+        .word (4*60+30+3) * 50                ; #5 4:30
 
 
 song_name_empty:
@@ -1990,25 +1957,13 @@ song_4_name:
 song_5_name:
         scrcode "       M'ujer Am&ante"
         .byte $ff
-song_6_name:
-        scrcode "       Juana Azurduy "
-        .byte $ff
-song_7_name:
-        scrcode "       Loco un Poco "
-        .byte $ff
-song_8_name:
-        scrcode "         M'asticar "
-        .byte $ff
-song_9_name:
-        scrcode "         Profugos "
-        .byte $ff
 
 
 song_1_author:
         scrcode "Uctum&i"
         .byte $ff
 song_2_author:
-        scrcode " CoM'u "
+        scrcode "Uctum&i"
         .byte $ff
 song_3_author:
         scrcode "Uctum&i"
@@ -2017,18 +1972,6 @@ song_4_author:
         scrcode "Uctum&i"
         .byte $ff
 song_5_author:
-        scrcode "Uctum&i"
-        .byte $ff
-song_6_author:
-        scrcode "Uctum&i"
-        .byte $ff
-song_7_author:
-        scrcode "Uctum&i"
-        .byte $ff
-song_8_author:
-        scrcode " CoM'u "
-        .byte $ff
-song_9_author:
         scrcode "Uctum&i"
         .byte $ff
 
@@ -2092,35 +2035,22 @@ bitmap:
 ;segment "MUSIC"
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
 .segment "MUSIC"
-.incbin "uc-seguir.exo"
+.incbin "01_O_Tempo_(4m07s).exo"
 song_1_end_of_data:
 
-.incbin "lastango25.exo"
+.incbin "02_Fico_(3m26s).exo"
 song_2_end_of_data:
 
-.incbin "uc-amor.exo"
+.incbin "03_Amigo_(3m13s).exo"
 song_3_end_of_data:
 
-.incbin "uc-hacelo.exo"
+.incbin "04_Certas_Coisas_(4m18s).exo"
 song_4_end_of_data:
 
-.incbin "uc-mujer.exo"
+.incbin "05_Menina_Veneno_(4m30s).exo"
 song_5_end_of_data:
 
-.incbin "uc-juana.exo"
-song_6_end_of_data:
-
-.incbin "uc-loco.exo"
-song_7_end_of_data:
-
-.incbin "chewing22.exo"
-song_8_end_of_data:
-
-.incbin "uc-profugos.exo"
-song_9_end_of_data:
-
-
-.incbin "uc-himn.exo"
+.incbin "06_(scroller_final)_Felicidade_(loop).exo"
 song_easter_egg_end_of_data:
 
 .byte 0                 ; ignore
