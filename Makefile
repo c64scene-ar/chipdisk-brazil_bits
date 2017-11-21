@@ -12,13 +12,13 @@ SRC = src/main.s src/chipdisk.s src/exodecrunch.s src/utils.s
 
 d64:
 	echo "Generating d64 file..."
-	$(C1541) -format "chipdisk ii,96" d64 $(D64_IMAGE)
+	$(C1541) -format "chipdisk br. v1,96" d64 $(D64_IMAGE)
 	$(C1541) $(D64_IMAGE) -write bin/intro-exo.prg chipdisk
 	$(C1541) $(D64_IMAGE) -list
 
 run: d64
 	echo "Running game"
-	$(X64) -verbose -moncommands bin/intro.sym $(D64_IMAGE)
+	$(X64) -verbose -moncommands bin/chipdisk.sym $(D64_IMAGE)
  
 chipdisk: ${SRC}
 	echo

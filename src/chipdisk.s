@@ -1899,20 +1899,20 @@ song_end_addrs:
         .addr song_5_end_of_data
 
 song_table_freq_addrs_lo:
-        .addr $15b1
+        .addr $14ed
         .addr $16fd
         .addr $17eb
         .addr $16ea
-        .addr $15b1
-        .addr $15b1                             ; easteregg song
+        .addr $14ed
+        .addr $14ed                             ; easteregg song
 
 song_table_freq_addrs_hi:
-        .addr $1611
+        .addr $154d
         .addr $175d
         .addr $1783
         .addr $1682
-        .addr $1611
-        .addr $1611                             ; easteregg song
+        .addr $154d
+        .addr $154d                             ; easteregg song
 
 timer_speed:
         .addr $4cc7                             ; default: PAL 50.125hz
@@ -2034,10 +2034,10 @@ bitmap:
 ;segment "MUSIC"
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
 .segment "MUSIC"
-.incbin "01_O_Tempo_(4m07s).exo"
+.incbin "01_O_Tempo_N%E3o_Para_(4m07s).exo"
 song_1_end_of_data:
 
-.incbin "02_Fico_(3m26s).exo"
+.incbin "02_Fico_Assim_Sem_Voc%EA_(3m26s).exo"
 song_2_end_of_data:
 
 .incbin "03_Amigo_(3m13s).exo"
