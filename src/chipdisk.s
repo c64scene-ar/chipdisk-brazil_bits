@@ -1748,6 +1748,81 @@ loop:
         rts
 .endproc
 
+;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+; void setup_timer_speed()
+;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+.proc setup_timer_speed
+        ;   $01 --> PAL
+        ;   $2F --> PAL-N
+        ;   $28 --> NTSC
+        ;   $2e --> NTSC-OLD
+        lda ZP_VIC_VIDEO_TYPE
+        cmp #$01
+        beq exit
+        cmp #$2f
+        beq do_paln
+
+do_ntsc:                                                ; fall through: ntsc
+        ldx #<$4fb2
+        ldy #>$4fb2
+        bne store
+
+do_paln:
+        ldx #<$4fc1
+        ldy #>$4fc1
+
+store:
+        stx timer_speed
+        sty timer_speed+1
+exit:
+        rts
+.endproc
+
+;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+; void update_freq_table()
+;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+.proc update_freq_table
+        ;   $01 --> PAL
+        ;   $2F --> PAL-N
+        ;   $28 --> NTSC
+        ;   $2e --> NTSC-OLD
+        lda ZP_VIC_VIDEO_TYPE
+        cmp #$01                                        ; PAL? don't update it then
+        bne l0
+        rts
+
+l0:                                                     ; PAL-N/NTSC use the same freq table
+        lda current_song
+        asl
+        tax
+
+        lda song_table_freq_addrs_lo,x
+        sta dst_lo
+        lda song_table_freq_addrs_lo+1,x
+        sta dst_lo+1
+
+        lda song_table_freq_addrs_hi,x
+        sta dst_hi
+        lda song_table_freq_addrs_hi+1,x
+        sta dst_hi+1
+
+
+        ldx #94                                         ; copy one less
+                                                        ; since sidwizard table
+l1:     lda ntsc_freq_table_lo,x
+dst_lo = *+1
+        sta $1000,x                                     ; self modifying
+
+        lda ntsc_freq_table_hi,x
+dst_hi = *+1
+        sta $1000,x                                     ; self modifying
+
+        dex
+        bpl l1
+
+        rts
+.endproc
+
 
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
 ; BUTTON_IMAGE_COPY
@@ -1942,19 +2017,19 @@ song_author_empty:
                 ; Names must be as long as the longest name
                 ; must be $ff terminated
 song_1_name:
-        scrcode "Seguir viviendo sin tu am&or"
+        scrcode "      O tem&po nao para     "
         .byte $ff
 song_2_name:
-        scrcode "   Ultim&o Tango en Paris   "
+        scrcode "    Fico Assim& Sem& Voce   "
         .byte $ff
 song_3_name:
-        scrcode "     Am&or Clasificado   "
+        scrcode "           Am&igo           "
         .byte $ff
 song_4_name:
-        scrcode "       Hacelo por m&i "
+        scrcode "        Certas coisas       "
         .byte $ff
 song_5_name:
-        scrcode "       M'ujer Am&ante"
+        scrcode "       M'enina Veneno       "
         .byte $ff
 
 
@@ -2103,80 +2178,6 @@ EASTEREGG_SIZE = * - easter_egg_bundle_begin
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
 .segment "MORECODE2"
 
-;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
-; void setup_timer_speed()
-;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
-.proc setup_timer_speed
-        ;   $01 --> PAL
-        ;   $2F --> PAL-N
-        ;   $28 --> NTSC
-        ;   $2e --> NTSC-OLD
-        lda ZP_VIC_VIDEO_TYPE
-        cmp #$01
-        beq exit
-        cmp #$2f
-        beq do_paln
-
-do_ntsc:                                                ; fall through: ntsc
-        ldx #<$4fb2
-        ldy #>$4fb2
-        bne store
-
-do_paln:
-        ldx #<$4fc1
-        ldy #>$4fc1
-
-store:
-        stx timer_speed
-        sty timer_speed+1
-exit:
-        rts
-.endproc
-
-;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
-; void update_freq_table()
-;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
-.proc update_freq_table
-        ;   $01 --> PAL
-        ;   $2F --> PAL-N
-        ;   $28 --> NTSC
-        ;   $2e --> NTSC-OLD
-        lda ZP_VIC_VIDEO_TYPE
-        cmp #$01                                        ; PAL? don't update it then
-        bne l0
-        rts
-
-l0:                                                     ; PAL-N/NTSC use the same freq table
-        lda current_song
-        asl
-        tax
-
-        lda song_table_freq_addrs_lo,x
-        sta dst_lo
-        lda song_table_freq_addrs_lo+1,x
-        sta dst_lo+1
-
-        lda song_table_freq_addrs_hi,x
-        sta dst_hi
-        lda song_table_freq_addrs_hi+1,x
-        sta dst_hi+1
-
-
-        ldx #94                                         ; copy one less
-                                                        ; since sidwizard table
-l1:     lda ntsc_freq_table_lo,x
-dst_lo = *+1
-        sta $1000,x                                     ; self modifying
-
-        lda ntsc_freq_table_hi,x
-dst_hi = *+1
-        sta $1000,x                                     ; self modifying
-
-        dex
-        bpl l1
-
-        rts
-.endproc
 
 .incbin "easteregg_txt-exo.prg"
 easteregg_txt_end:
