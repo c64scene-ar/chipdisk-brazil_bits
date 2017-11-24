@@ -4,20 +4,18 @@
 .macpack cbm                            ; adds support for scrcode
 .include "c64.inc"                      ; c64 constants
 
-.segment "CODE"
+.segment "CODE"                         ; $7000
 
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
 ; ZP and other variables
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
 ZP_SYNC_MUSIC           = $40           ; byte
+ZP_SYNC_ANIM            = $41           ; byte
 ZP_VIC_VIDEO_TYPE       = $60           ; byte. values:
                                         ;   $01 --> PAL
                                         ;   $2F --> PAL-N
                                         ;   $28 --> NTSC
                                         ;   $2e --> NTSC-OLD
-
-CHARSET_ADDR    = $c000
-SCROLL_TEXT     = $c800                 ; where the scroll is
 
 DEBUG = 1
 
@@ -44,11 +42,6 @@ DEBUG = 1
         lda #0
         sta ZP_SYNC_MUSIC
         sta ZP_SYNC_ANIM
-        sta ZP_EYE_MODE
-        sta ZP_EYE_DELAY_LO
-        STA ZP_BIT_INDEX
-        lda #1
-        sta ZP_EYE_DELAY_HI
 
         lda #%00010101
         sta $dd00                       ; Vic bank 2: $8000-$bFFF
@@ -57,7 +50,6 @@ DEBUG = 1
         sta $d018                       ; charset at $1800 (VIC)
 
         jsr init_screen
-        jsr init_sprites
         jsr init_charset
         jsr init_irq
         jsr init_nmi
@@ -82,7 +74,6 @@ test_anim:
 
 ;        dec $d020
         jsr animate_scroll              ; animation
-        jsr animate_eye
 ;        inc $d020
         jmp main_loop
 
@@ -105,3 +96,68 @@ play_music:
         rts
 .endproc
 
+;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+;void init_charset()
+;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+.proc init_charset
+        rts
+.endproc
+
+;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+;void init_irq()
+;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+.proc init_irq
+        rts
+.endproc
+
+;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+;void init_nmi()
+;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+.proc init_nmi
+        rts
+.endproc
+
+;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+;void animate_scroll
+;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+.proc animate_scroll
+        rts
+.endproc
+
+charset_colors:
+        .incbin "easter_charset_2x2-colors.bin"
+
+scroll_txt:
+        scrcode "THIS IS OUR LITTLE HOMAGE TO THE CLASSICS OF BRAZILIAN POPULAR MUSIC, "
+        scrcode "WE'RE SORRY WE COULD ONLY PICK A FEW OUT OF SO MANY GREAT SONGS FROM BRAZIL'S RICH CULTURE. "
+        scrcode "THERE'S A LOT OF ROOM FOR CREATING C64 MUSIC DISKS BASED IN LATIN AMERICAN MUSIC. "
+        scrcode "WE AT PVM WANT TO INVITE YOU TO THE FLASH PARTY 20 YEAR ANNIVERSARY, "
+        scrcode "A DEMOSCENE EVENT WE'RE PLANNING FOR 2018 IN BUENOS AIRES. IT WILL BE A GREAT TIME TO "
+        scrcode "MEET AND SHARE OUR GEEKY OBSESSIONS, SO PLEASE STAY TUNED FOR DATES AND LOCATION! "
+        scrcode "THE SONG YOU'RE LISTENING TO NOW IS UCTUMI'S ATTEMPT AT A VERSION OF THE FELICIDADE SONG. "
+        scrcode "SAMBA AND BOSSA NOVA ARE REALLY TOUGH TO GET RIGHT, SO THIS IS THE BEST HE COULD DO. "
+        scrcode "AND THE GRAPHICS THAT YOU'RE WATCHING IS ALAKRAN'S HOMAGE TO THE GREAT BRAZILIAN ILLUSTRATOR LOBO. "
+        scrcode "CREDITS: CODE BY RIQ, GFX BY ALAKRAN, CHARSET BY ARLEQUIN AND MUSIC BY UCTUMI. "
+        scrcode "GREETINGS TO OUR FRIENDS AT GAROA HACKER CLUBE OF BRAZIL FROM PUNGAS DE VILLA MARTELLI, ARGENTINA, 2017. HAVE A HAPPY NEW YEAR!! "
+        scrcode "                                  "
+        .byte $ff
+
+;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+.segment "BITMAP"       ; $4000
+;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+        .incbin "cristo.vsf.bitmap"
+
+;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+.segment "SCREENRAM"    ; $6000
+;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+        .incbin "cristo.vsf.attrib"
+
+;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+.segment "COLORRAM"     ; $6400
+;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+        .incbin "cristo.vsf.colmap"
+
+;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+.segment "CHARSET"      ; $6800
+;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+        .incbin "easter_charset_2x2-charset.bin"

@@ -15,7 +15,7 @@ ZP_VIC_VIDEO_TYPE       = $60           ; byte. values:
                                         ;   $28 --> NTSC
                                         ;   $2e --> NTSC-OLD
 
-.segment "MORECODE2"
+.segment "MORECODE"
 
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
 ; char ut_detect_pal_paln_ntsc(void)

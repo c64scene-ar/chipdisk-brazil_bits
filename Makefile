@@ -6,7 +6,7 @@ X64 = x64sc
 D64_IMAGE = "bin/chipdisk-br.d64"
 C1541 = c1541
 
-all: easteregg_txt easteregg chipdisk decrunch_chipdisk intro run
+all: easteregg chipdisk decrunch_chipdisk intro run
 
 SRC = src/main.s src/chipdisk.s src/exodecrunch.s src/utils.s
 
@@ -44,14 +44,6 @@ easteregg: src/easteregg.s
 	exomizer mem -o bin/$@-exo.prg bin/$@.prg
 	cp bin/$@-exo.prg src/
 
-easteregg_txt: src/easteregg_txt.s
-	echo
-	echo =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-	echo Building EasterEgg Scroll Text
-	echo =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-	cl65 -d -g -Ln bin/$@.sym -o bin/$@.prg -t c64 -C easteregg_txt.cfg $^
-	exomizer mem -o bin/$@-exo.prg bin/$@.prg
-	cp bin/$@-exo.prg src/
 
 testeaster: easteregg
 	$(X64) -moncommands bin/easteregg.sym bin/easteregg.prg

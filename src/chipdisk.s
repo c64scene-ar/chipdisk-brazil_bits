@@ -110,9 +110,8 @@ ora_addr = *+1
 .proc player_main
         sei
 
-        ldx #$17                        ; only use 24 bytes of stack
-        txs                             ; rest is reserved for easteregg code
-        jsr save_easteregg
+        ldx #$ff                        ; restore stack
+        txs
 
         lda #$35                        ; no basic, no kernal
         sta $01
@@ -1233,6 +1232,7 @@ f1_pressed:
 .endproc
 
 .export setup_easteregg
+;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
 .proc setup_easteregg
         sei
 
@@ -1252,13 +1252,6 @@ f1_pressed:
 
         dec $01
 
-        ldx #<($118 + EASTEREGG_SIZE)           ; easteregg code
-        ldy #>($118 + EASTEREGG_SIZE)
-        stx _crunched_byte_lo
-        sty _crunched_byte_hi
-
-        jsr decrunch
-
         ldx #<song_easter_egg_end_of_data       ; easteregg song
         ldy #>song_easter_egg_end_of_data
         stx _crunched_byte_lo
@@ -1266,8 +1259,8 @@ f1_pressed:
 
         jsr decrunch
 
-        ldx #<easteregg_txt_end                 ; easteregg scroll text
-        ldy #>easteregg_txt_end
+        ldx #<easter_egg_bundle_end             ; easteregg code
+        ldy #>easter_egg_bundle_end
         stx _crunched_byte_lo
         sty _crunched_byte_hi
 
@@ -1279,10 +1272,9 @@ f1_pressed:
         sta current_song                        ; needed to update the freq table
         jsr update_freq_table                   ; correctly
 
-        ldx #$ff
+        ldx #$ff                                ; restore stack
         tsx
 
-                                                ; turn VIC on
         lda #%00011011                          ; charset mode, default scroll-Y position, 25-rows
         sta $d011                               ; extended color mode: off
 
@@ -1292,7 +1284,7 @@ f1_pressed:
         lda #$81                                ; turn on cia1 interrups again
         sta $dc0d
 
-        jmp $9000                               ; easter egg start address with
+        jmp $7000                               ; easter egg start address with
                                                 ; interrupts disabled
 
 .endproc
@@ -2137,52 +2129,12 @@ charset:
 .incbin "names-charset1024.bin"
 
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
-;segment "INTROCODE"
+;segment "EASTEREGG"
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
-.segment "INTROCODE"
-.proc save_easteregg
-        ldx #0
-
-l0:
-        lda easter_egg_bundle_begin,x
-        sta $118,x
-        lda easter_egg_bundle_begin + $0100,x
-        sta $218,x
-        lda easter_egg_bundle_begin + $0200,x
-        sta $318,x
-        lda easter_egg_bundle_begin + $0300,x
-        sta $418,x
-        lda easter_egg_bundle_begin + $0400,x
-        sta $518,x
-        lda easter_egg_bundle_begin + $0500,x
-        sta $618,x
-        lda easter_egg_bundle_begin + $05e8,x
-        sta $700,x
-        inx
-        bne l0
-
-        rts
-.endproc
-
-;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
-;segment "EASTEREGG1"
-;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
-.segment "EASTEREGG1"
+.segment "EASTEREGG"
 easter_egg_bundle_begin:
         .incbin "easteregg-exo.prg"
-EASTEREGG_SIZE = * - easter_egg_bundle_begin
-.assert EASTEREGG_SIZE < $6e7, error, "Easteregg too big to fit"
-
-;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
-;segment "MORECODE2"
-;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
-.segment "MORECODE2"
-
-
-.incbin "easteregg_txt-exo.prg"
-easteregg_txt_end:
-        .byte 0                                         ; ignore
-
+easter_egg_bundle_end:
 
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
 ;segment "FREESPACE"
