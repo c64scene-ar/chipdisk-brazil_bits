@@ -395,8 +395,6 @@ palette:
         .byte 0, 0, 0, 0, 0
 
         .byte 2, 2, 8, 10, 10, 15, 7, 1
-        .byte 1, 1
-
 TOTAL_PALETTE = * - palette
 
 label_linyera_ok:
