@@ -79,17 +79,17 @@ chipdisk_end:
 
         ldx #0
 
-@l0:    lda bitmap_color + $000,x       ; copy color ram, first 14 rows
+@l0:    lda bitmap_color + $0000,x      ; copy color ram, first 18 rows
         sta $d800,x
-        lda bitmap_color + $100,x
+        lda bitmap_color + $0100,x
         sta $d900,x
-        lda bitmap_color + $130,x
-        sta $d900 + $030,x
+        lda bitmap_color + $01d0,x
+        sta $d900 + $00d0,x
         inx
         bne @l0
 
         lda #0                          ; rest should be 1 (white)
-@l00:   sta $da30,x                     ; for the labels
+@l00:   sta $dad0,x                     ; for the labels
         sta $db00,x
         inx
         bne @l00
@@ -147,29 +147,22 @@ do_effects:
         stx effect_wip                  ; reset "effect_wip" if not done
 
 @l0:
-        lda $f800 + 40 * 15,x           ; modify: "pungas de villa..."
+        lda $f800 + 40 * 20,x           ; modify: "pungas de villa..."
         cmp label_linyera_ok + 40 * 0,x
         beq @next0
-        inc $f800 + 40 * 15,x
+        inc $f800 + 40 * 20,x
         inc effect_wip
 
 @next0:
-        lda $f800 + 40 * 18,x           ; modify "presents..."
+        lda $f800 + 40 * 22,x           ; modify "presents..."
         cmp label_linyera_ok + 40 * 1,x
         beq @next1
-        inc $f800 + 40 * 18,x
+        inc $f800 + 40 * 22,x
         inc effect_wip
 
 @next1:
-        lda $f800 + 40 * 21,x           ; modify "de musica linyera..."
-        cmp label_linyera_ok + 40 * 2,x
-        beq @next2
-        inc $f800 + 40 * 21,x
-        inc effect_wip
-
-@next2:
         lda $f800 + 40 * 24,x           ; modify "de musica linyera..."
-        cmp label_linyera_ok + 40 * 3,x
+        cmp label_linyera_ok + 40 * 2,x
         beq @skip
         inc $f800 + 40 * 24,x
         inc effect_wip
@@ -282,7 +275,7 @@ irq_bitmap:
         stx $fffe
         sty $ffff
 
-        lda #50 + (8 * 14) + 2
+        lda #50 + (8 * 18) + 2
         sta $d012
 
         inc sync_raster_irq
@@ -320,7 +313,7 @@ irq_text:
         stx $fffe
         sty $ffff
 
-        lda #50 + (8 * 14) + 5
+        lda #50 + (8 * 19) + 5
         sta $d012
 
         pla                             ; restores A, X, Y
@@ -394,20 +387,11 @@ delay_space_bar:        .byte 0
 palette:
         .byte 6, 4, 14, 14,  3, 13, 1, 1
 
-        .byte 0, 0, 0, 0,    0, 0, 0
         .byte 0, 0, 0, 0,    0
 
         .byte 1, 1
         .byte 1, 13, 3, 14, 14, 4, 6, 6
 
-        .byte 0, 0, 0, 0,   0, 0, 0
-        .byte 0, 0, 0, 0
-
-
-        .byte 1, 1
-        .byte 1, 7, 15, 10, 10, 8, 2, 2
-
-        .byte 0, 0, 0, 0,   0, 0, 0
         .byte 0, 0, 0, 0, 0
 
         .byte 2, 2, 8, 10, 10, 15, 7, 1
@@ -426,20 +410,20 @@ TOTAL_DECRUNCH_SIZE = * - decruncher
 ;segment "BITMAP" $C000
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
 .segment "BITMAP"
-        .incbin "intro_half.bitmap"
+        .incbin "manos.vsf.bitmap"
 
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
 ;segment "SCREENRAM" $E000
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
 .segment "SCREENRAM"
-        .incbin "intro_half.colormap"
+        .incbin "manos.vsf.colmap"
 
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
 ;segment "COLORRAM" $E400
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
 .segment "COLORRAM"
 bitmap_color:
-        .incbin "intro_half.attrib"
+        .incbin "manos.vsf.attrib"
 
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
 ;segment "CHARSET" $F000
