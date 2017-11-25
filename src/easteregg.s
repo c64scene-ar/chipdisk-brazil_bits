@@ -17,7 +17,7 @@ ZP_VIC_VIDEO_TYPE       = $60           ; byte. values:
                                         ;   $28 --> NTSC
                                         ;   $2e --> NTSC-OLD
 
-DEBUG = 1
+;DEBUG = 1
 
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
 ; start
@@ -43,14 +43,51 @@ DEBUG = 1
         sta ZP_SYNC_MUSIC
         sta ZP_SYNC_ANIM
 
-        lda #%00010101
-        sta $dd00                       ; Vic bank 2: $8000-$bFFF
+        asl $d019                       ; ACK raster interrupt
+        lda $dc0d                       ; ACK timer A interrupt
+        lda $dd0d                       ; ACK timer B interrupt
 
-        lda #%00010100                  ; screen point to $0800
-        sta $d018                       ; charset at $1800 (VIC)
+        lda $dd00                       ; Vic bank 1: $4000-$7FFF
+        and #%11111100
+        ora #2
+        sta $dd00
 
-        jsr init_screen
-        jsr init_charset
+        lda #%00011000                  ; no scroll, multi-color,40-cols
+        sta $d016
+
+        lda #%10000000                  ; screen addr $2000, charset at $0000 / bitmap at $0000
+        sta $d018
+
+        lda #%00111011                  ; bitmap mode enabled
+        sta $d011
+
+        lda #0                          ; no sprites
+        sta VIC_SPR_ENA
+
+        lda #0                          ; black for background color
+        sta $d020
+        sta $d021
+        sta $d022
+        sta $d023
+
+        ldx #0
+
+@l0:    lda bitmap_color + $0000,x      ; copy color ram, first 22 rows
+        sta $d800,x
+        lda bitmap_color + $0100,x
+        sta $d900,x
+        lda bitmap_color + $0200,x
+        sta $da00,x
+        lda bitmap_color + $0270,x
+        sta $da70,x
+        inx
+        bne @l0
+
+        lda #$01                        ; rest should be 1 (white)
+@l00:   sta $db70,x                     ; for the labels
+        inx
+        bne @l00
+
         jsr init_irq
         jsr init_nmi
 
@@ -87,20 +124,6 @@ play_music:
 .endif
         jmp test_anim
 
-.endproc
-
-;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
-;void init_screen()
-;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
-.proc init_screen
-        rts
-.endproc
-
-;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
-;void init_charset()
-;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
-.proc init_charset
-        rts
 .endproc
 
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
@@ -150,12 +173,13 @@ scroll_txt:
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
 .segment "SCREENRAM"    ; $6000
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
-        .incbin "cristo.vsf.attrib"
+        .incbin "cristo.vsf.colmap"
 
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
 .segment "COLORRAM"     ; $6400
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
-        .incbin "cristo.vsf.colmap"
+bitmap_color:
+        .incbin "cristo.vsf.attrib"
 
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
 .segment "CHARSET"      ; $6800
