@@ -16,7 +16,8 @@ ZP_VIC_VIDEO_TYPE       = $60           ; byte. values:
                                         ;   $2F --> PAL-N
                                         ;   $28 --> NTSC
                                         ;   $2e --> NTSC-OLD
-
+ZP_TIMER_SPEED_LO       = $61           ;byte: value for $dc04
+ZP_TIMER_SPEED_HI       = $62           ;byte: value for $dc05
 ;DEBUG = 1
 
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
@@ -31,21 +32,23 @@ ZP_VIC_VIDEO_TYPE       = $60           ; byte. values:
         lda #$35                        ; BASIC & KERNAL out
         sta $01
 
-        lda #0
-        sta $d020
-        sta $d021
-
         lda #$01
         sta ZP_VIC_VIDEO_TYPE           ; set it to PAL in DEBUG mode
 .endif
 
+        ldx #$ff                        ; restore stack
+        tsx
+
+        ; screen setup
+        ;
+        lda #1
+        sta $d020
+        lda #0
+        sta $d021
+
         lda #0
         sta ZP_SYNC_MUSIC
         sta ZP_SYNC_ANIM
-
-        asl $d019                       ; ACK raster interrupt
-        lda $dc0d                       ; ACK timer A interrupt
-        lda $dd0d                       ; ACK timer B interrupt
 
         lda $dd00                       ; Vic bank 1: $4000-$7FFF
         and #%11111100
@@ -64,11 +67,6 @@ ZP_VIC_VIDEO_TYPE       = $60           ; byte. values:
         lda #0                          ; no sprites
         sta VIC_SPR_ENA
 
-        lda #0                          ; black for background color
-        sta $d020
-        sta $d021
-        sta $d022
-        sta $d023
 
         ldx #0
 
@@ -88,8 +86,33 @@ ZP_VIC_VIDEO_TYPE       = $60           ; byte. values:
         inx
         bne @l00
 
-        jsr init_irq
-        jsr init_nmi
+
+        ; IRQ setup
+
+        asl $d019                       ; ACK raster interrupt
+        lda $dc0d                       ; ACK timer A interrupt
+        lda $dd0d                       ; ACK timer B interrupt
+
+        ldx #<irq_bitmap                ; setup irq
+        ldy #>irq_bitmap
+        stx $fffe
+        sty $ffff
+
+        ldx #<nmi_irq                   ; setup nmi
+        ldy #>nmi_irq
+        stx $fffa
+        sty $fffb
+
+        ldx ZP_TIMER_SPEED_LO           ; FIXME: why should I set it up again?
+        ldy ZP_TIMER_SPEED_HI           ; chipdisk disk already setup it up
+        stx $dc04                       ; but if I don't it plays super fast
+        sty $dc05                       ; Do research
+
+        lda #$01
+        sta $d01a                       ; enable raster IRQ
+
+        lda #$81
+        sta $dc0d                       ; turn on CIA 1 interrups
 
 
 .ifndef DEBUG
@@ -98,6 +121,8 @@ ZP_VIC_VIDEO_TYPE       = $60           ; byte. values:
 .endif
 
         cli
+
+        ; Main loop
 
 main_loop:
         lda ZP_SYNC_MUSIC
@@ -115,7 +140,7 @@ test_anim:
         jmp main_loop
 
 play_music:
-        dec ZP_SYNC_MUSIC               ; music
+        dec ZP_SYNC_MUSIC               ; reset music var
 
 .ifndef DEBUG
 ;        inc $d020
@@ -127,18 +152,75 @@ play_music:
 .endproc
 
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
-;void init_irq()
-;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
-.proc init_irq
-        rts
-.endproc
+irq_bitmap:
+        pha                             ; saves A
+
+        asl $d019                       ; clears raster interrupt
+        bcs @is_raster
+
+        lda $dc0d                       ; clears CIA1 timer A interrupt
+        inc ZP_SYNC_MUSIC
+        jmp @exit
+
+@is_raster:
+        lda #%00011000                  ; no scroll, multi-color,40-cols
+        sta $d016
+
+        lda #%10000000                  ; screen addr $2000, charset at $0000 / bitmap at $0000
+        sta $d018
+
+        lda #%00111011                  ; bitmap mode enabled
+        sta $d011
+
+        lda #<irq_text
+        sta $fffe
+        lda #>irq_text
+        sta $ffff
+
+        lda #50 + (8 * 23) + 2
+        sta $d012
+
+        inc ZP_SYNC_ANIM
+
+@exit:
+        pla                             ; restores A
+
+nmi_irq:
+        rti                             ; restores previous PC, status
 
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
-;void init_nmi()
-;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
-.proc init_nmi
-        rts
-.endproc
+irq_text:
+        pha                             ; saves A
+
+        asl $d019                       ; clears raster interrupt
+        bcs @is_raster
+
+        lda $dc0d                       ; clears CIA1 timer A interrupt
+        inc ZP_SYNC_MUSIC
+        jmp @exit
+
+@is_raster:
+        lda #%00001000                  ; no scroll, multi-color off, 40-cols
+        sta $d016
+
+        lda #%11101100                  ; screen addr 0x3800, charset at $3000
+        sta $d018
+
+        lda #%00011011                  ; bitmap mode disabled
+        sta $d011
+
+        lda #<irq_bitmap
+        sta $fffe
+        lda #>irq_bitmap
+        sta $ffff
+
+        lda #20
+        sta $d012
+
+@exit:
+        pla                             ; restores A
+        rti                             ; restores previous PC, status
+
 
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
 ;void animate_scroll
@@ -159,7 +241,7 @@ scroll_txt:
         scrcode "MEET AND SHARE OUR GEEKY OBSESSIONS, SO PLEASE STAY TUNED FOR DATES AND LOCATION! "
         scrcode "THE SONG YOU'RE LISTENING TO NOW IS UCTUMI'S ATTEMPT AT A VERSION OF THE FELICIDADE SONG. "
         scrcode "SAMBA AND BOSSA NOVA ARE REALLY TOUGH TO GET RIGHT, SO THIS IS THE BEST HE COULD DO. "
-        scrcode "AND THE GRAPHICS THAT YOU'RE WATCHING IS ALAKRAN'S HOMAGE TO THE GREAT BRAZILIAN ILLUSTRATOR LOBO. "
+        scrcode "AND THE GRAPHIC THAT YOU'RE WATCHING IS ALAKRAN'S HOMAGE TO THE GREAT BRAZILIAN ILLUSTRATOR LOBO. "
         scrcode "CREDITS: CODE BY RIQ, GFX BY ALAKRAN, CHARSET BY ARLEQUIN AND MUSIC BY UCTUMI. "
         scrcode "GREETINGS TO OUR FRIENDS AT GAROA HACKER CLUBE OF BRAZIL FROM PUNGAS DE VILLA MARTELLI, ARGENTINA, 2017. HAVE A HAPPY NEW YEAR!! "
         scrcode "                                  "

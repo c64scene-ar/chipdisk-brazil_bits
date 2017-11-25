@@ -32,6 +32,8 @@ ZP_VIC_VIDEO_TYPE       = $60           ; byte. values:
                                         ;   $2F --> PAL-N
                                         ;   $28 --> NTSC
                                         ;   $2e --> NTSC-OLD
+ZP_TIMER_SPEED_LO       = $61           ;byte: value for $dc04
+ZP_TIMER_SPEED_HI       = $62           ;byte: value for $dc05
 
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
 ; Constants
@@ -151,8 +153,8 @@ ora_addr = *+1
 
         jsr setup_timer_speed
 
-        ldx timer_speed
-        ldy timer_speed+1
+        ldx ZP_TIMER_SPEED_LO
+        ldy ZP_TIMER_SPEED_HI
         stx $dc04                       ; it plays at 50.125hz
         sty $dc05
 
@@ -1252,6 +1254,7 @@ f1_pressed:
 
         dec $01
 
+        ; decrunch song
         ldx #<song_easter_egg_end_of_data       ; easteregg song
         ldy #>song_easter_egg_end_of_data
         stx _crunched_byte_lo
@@ -1259,6 +1262,13 @@ f1_pressed:
 
         jsr decrunch
 
+        ; and patch freq. table if needed
+        lda #TOTAL_SONGS                        ; current song (last song + 1 - 1)
+        sta current_song                        ; needed to update the freq table
+        jsr update_freq_table                   ; correctly
+
+
+        ; decrunch easter egg code
         ldx #<easter_egg_bundle_end             ; easteregg code
         ldy #>easter_egg_bundle_end
         stx _crunched_byte_lo
@@ -1266,23 +1276,8 @@ f1_pressed:
 
         jsr decrunch
 
-        inc $01
 
-        lda #TOTAL_SONGS                        ; current song (last song + 1 - 1)
-        sta current_song                        ; needed to update the freq table
-        jsr update_freq_table                   ; correctly
-
-        ldx #$ff                                ; restore stack
-        tsx
-
-        lda #%00011011                          ; charset mode, default scroll-Y position, 25-rows
-        sta $d011                               ; extended color mode: off
-
-        lda #%00001000                          ; no scroll, hires (mono color), 40-cols
-        sta $d016                               ; turn off multicolor
-
-        lda #$81                                ; turn on cia1 interrups again
-        sta $dc0d
+        inc $01                                 ; restore $01
 
         jmp $7000                               ; easter egg start address with
                                                 ; interrupts disabled
@@ -1748,11 +1743,16 @@ loop:
         ;   $2F --> PAL-N
         ;   $28 --> NTSC
         ;   $2e --> NTSC-OLD
+
+        ldx #<$4cc7                                     ; value for PAL
+        ldy #>$4cc7
+
         lda ZP_VIC_VIDEO_TYPE
         cmp #$01
-        beq exit
+        beq store                                       ;it is PAL
+
         cmp #$2f
-        beq do_paln
+        beq do_paln                                     ;it is PAL-N
 
 do_ntsc:                                                ; fall through: ntsc
         ldx #<$4fb2
@@ -1764,8 +1764,8 @@ do_paln:
         ldy #>$4fc1
 
 store:
-        stx timer_speed
-        sty timer_speed+1
+        stx ZP_TIMER_SPEED_LO
+        sty ZP_TIMER_SPEED_HI
 exit:
         rts
 .endproc
@@ -1980,9 +1980,6 @@ song_table_freq_addrs_hi:
         .addr $1682
         .addr $154d
         .addr $154d                             ; easteregg song
-
-timer_speed:
-        .addr $4cc7                             ; default: PAL 50.125hz
 
 song_durations:                                 ; measured in "cycles ticks"
         .word (4*60+07+3) * 50                  ; #1 4:07
