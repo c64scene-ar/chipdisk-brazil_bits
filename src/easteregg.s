@@ -4,7 +4,7 @@
 .macpack cbm                            ; adds support for scrcode
 .include "c64.inc"                      ; c64 constants
 
-.segment "CODE"                         ; $7000
+.segment "CODE"                         ; $7400
 
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
 ; ZP and other variables
@@ -18,7 +18,9 @@ ZP_VIC_VIDEO_TYPE       = $60           ; byte. values:
                                         ;   $2e --> NTSC-OLD
 ZP_TIMER_SPEED_LO       = $61           ;byte: value for $dc04
 ZP_TIMER_SPEED_HI       = $62           ;byte: value for $dc05
-;DEBUG = 1
+DEBUG = 1
+
+SCROLL_SCREEN   = $7000 + 23 * 40
 
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
 ; start
@@ -45,6 +47,10 @@ ZP_TIMER_SPEED_HI       = $62           ;byte: value for $dc05
         sta $d020
         lda #0
         sta $d021
+        lda #$03
+        sta $d022
+        lda #$03
+        sta $d023
 
         lda #0
         sta ZP_SYNC_MUSIC
@@ -81,7 +87,7 @@ ZP_TIMER_SPEED_HI       = $62           ;byte: value for $dc05
         inx
         bne @l0
 
-        lda #$01                        ; rest should be 1 (white)
+        lda #$0a                        ; rest should be 1 (white)
 @l00:   sta $db70,x                     ; for the labels
         inx
         bne @l00
@@ -103,19 +109,18 @@ ZP_TIMER_SPEED_HI       = $62           ;byte: value for $dc05
         stx $fffa
         sty $fffb
 
+        lda #$01
+        sta $d01a                       ; enable raster IRQ
+
+.ifndef DEBUG
         ldx ZP_TIMER_SPEED_LO           ; FIXME: why should I set it up again?
         ldy ZP_TIMER_SPEED_HI           ; chipdisk disk already setup it up
         stx $dc04                       ; but if I don't it plays super fast
         sty $dc05                       ; Do research
 
-        lda #$01
-        sta $d01a                       ; enable raster IRQ
-
         lda #$81
         sta $dc0d                       ; turn on CIA 1 interrups
 
-
-.ifndef DEBUG
         lda #0
         jsr $1000                       ; init sid
 .endif
@@ -152,7 +157,11 @@ play_music:
 .endproc
 
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
-irq_bitmap:
+nmi_irq:
+        rti
+
+;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+.proc irq_bitmap
         pha                             ; saves A
 
         asl $d019                       ; clears raster interrupt
@@ -177,19 +186,18 @@ irq_bitmap:
         lda #>irq_text
         sta $ffff
 
-        lda #50 + (8 * 23) + 2
+        lda #50 + (8 * 22) + 4
         sta $d012
 
         inc ZP_SYNC_ANIM
 
 @exit:
         pla                             ; restores A
-
-nmi_irq:
         rti                             ; restores previous PC, status
+.endproc
 
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
-irq_text:
+.proc irq_text
         pha                             ; saves A
 
         asl $d019                       ; clears raster interrupt
@@ -200,10 +208,11 @@ irq_text:
         jmp @exit
 
 @is_raster:
-        lda #%00001000                  ; no scroll, multi-color off, 40-cols
+        lda scroll_x
+        ora #%00010000                  ; set MCM on
         sta $d016
 
-        lda #%11101100                  ; screen addr 0x3800, charset at $3000
+        lda #%11001010                  ; screen addr $3000, charset at $2800
         sta $d018
 
         lda #%00011011                  ; bitmap mode disabled
@@ -220,30 +229,96 @@ irq_text:
 @exit:
         pla                             ; restores A
         rti                             ; restores previous PC, status
+.endproc
 
 
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
 ;void animate_scroll
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
 .proc animate_scroll
+        ; speed control
+        ldx scroll_x
+
+.repeat 3                               ;scroll speed
+        dec scroll_x
+.endrepeat
+
+        lda scroll_x
+        and #07
+        sta scroll_x
+
+        cpx scroll_x
+        bcc @do_scroll
+        rts
+
+@do_scroll:
+        ; move the chars to the left
+        ldx #0
+@l0:
+        lda SCROLL_SCREEN+1,x                   ; scroll top part of 1x2 char
+        sta SCROLL_SCREEN,x
+        lda SCROLL_SCREEN+40+1,x                ; scroll bottom part of 1x2 char
+        sta SCROLL_SCREEN+40,x
+        inx
+        cpx #39
+        bne @l0
+
+        ; put next char in column 40
+        ldx scroll_idx
+        lda scroll_txt,x
+        cmp #$ff
+        bne :+
+
+        ; reached $ff ? Then start from the beginning
+        lda #0
+        sta scroll_idx
+        sta half_char
+        lda scroll_txt
+
+:       ora half_char                           ; right part ? left part will be 0
+
+        sta SCROLL_SCREEN+39                    ; top part of the 2x2
+        ora #$80                                ; bottom part is 128 chars ahead in the charset
+        sta SCROLL_SCREEN+40+39                 ; bottom part of the 1x2 char
+
+        ; half char
+        lda half_char
+        eor #$40
+        sta half_char
+        bne @endscroll
+
+        ; only inc scroll_idx after 2 chars are printed
+        inx
+        stx scroll_idx
+
+@endscroll:
         rts
 .endproc
+
+;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+
+; variables
+sync:           .byte 1
+scroll_x:       .byte 7
+speed:          .byte 3
+scroll_idx:     .byte 0
+half_char:      .byte 0
 
 charset_colors:
         .incbin "easter_charset_2x2-colors.bin"
 
 scroll_txt:
-        scrcode "THIS IS OUR LITTLE HOMAGE TO THE CLASSICS OF BRAZILIAN POPULAR MUSIC, "
-        scrcode "WE'RE SORRY WE COULD ONLY PICK A FEW OUT OF SO MANY GREAT SONGS FROM BRAZIL'S RICH CULTURE. "
-        scrcode "THERE'S A LOT OF ROOM FOR CREATING C64 MUSIC DISKS BASED IN LATIN AMERICAN MUSIC. "
-        scrcode "WE AT PVM WANT TO INVITE YOU TO THE FLASH PARTY 20 YEAR ANNIVERSARY, "
-        scrcode "A DEMOSCENE EVENT WE'RE PLANNING FOR 2018 IN BUENOS AIRES. IT WILL BE A GREAT TIME TO "
-        scrcode "MEET AND SHARE OUR GEEKY OBSESSIONS, SO PLEASE STAY TUNED FOR DATES AND LOCATION! "
-        scrcode "THE SONG YOU'RE LISTENING TO NOW IS UCTUMI'S ATTEMPT AT A VERSION OF THE FELICIDADE SONG. "
-        scrcode "SAMBA AND BOSSA NOVA ARE REALLY TOUGH TO GET RIGHT, SO THIS IS THE BEST HE COULD DO. "
-        scrcode "AND THE GRAPHIC THAT YOU'RE WATCHING IS ALAKRAN'S HOMAGE TO THE GREAT BRAZILIAN ILLUSTRATOR LOBO. "
-        scrcode "CREDITS: CODE BY RIQ, GFX BY ALAKRAN, CHARSET BY ARLEQUIN AND MUSIC BY UCTUMI. "
-        scrcode "GREETINGS TO OUR FRIENDS AT GAROA HACKER CLUBE OF BRAZIL FROM PUNGAS DE VILLA MARTELLI, ARGENTINA, 2017. HAVE A HAPPY NEW YEAR!! "
+        scrcode "this is our little homage to the classics of brazilian popular music, "
+        scrcode "we're sorry we could only pick a few out of so many great songs from brazil's rich culture. "
+        scrcode "there's a lot of room for creating c64 music disks based in latin american music. "
+        scrcode "we at pvm want to invite you to the flash party 20 year anniversary, "
+        scrcode "a demoscene event we're planning for 2018 in buenos aires. it will be a great time to "
+        scrcode "meet and share our geeky obsessions, so please stay tuned for dates and location! "
+        scrcode "the song you're listening to now is uctumi's attempt at a version of the felicidade song. "
+        scrcode "samba and bossa nova are really tough to get right, so this is the best he could do. "
+        scrcode "and the graphic that you're watching is alakran's homage to the great brazilian illustrator lobo. "
+        scrcode "credits: code by riq, gfx by alakran, charset by arlequin and music by uctumi. "
+        scrcode "greetings to our friends at garoa hacker clube of brazil from pungas de villa martelli, argentina, 2017. have a happy new year!! "
         scrcode "                                  "
         .byte $ff
 

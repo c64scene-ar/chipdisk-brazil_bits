@@ -1279,7 +1279,7 @@ f1_pressed:
 
         inc $01                                 ; restore $01
 
-        jmp $7000                               ; easter egg start address with
+        jmp $7400                               ; easter egg start address with
                                                 ; interrupts disabled
 
 .endproc
