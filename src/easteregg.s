@@ -87,10 +87,17 @@ SCROLL_SCREEN   = $7000 + 23 * 40
         inx
         bne @l0
 
-        lda #$0a                        ; rest should be 1 (white)
-@l00:   sta $db70,x                     ; for the labels
-        inx
-        bne @l00
+        lda #$01                        ; white (1) row 22
+        ldx #40
+@l1:    sta $db70,x
+        dex
+        bpl @l1
+
+        lda #$0a                        ; white (9) rows 23 & 24
+        ldx #80                         ; using 9 instead of 1 to enable multi-color mode
+@l2:    sta $db70+40,x                  ; for the scroll
+        dex
+        bpl @l2
 
 
         ; IRQ setup
@@ -172,6 +179,9 @@ nmi_irq:
         jmp @exit
 
 @is_raster:
+        lda #0
+        sta $d021
+
         lda #%00011000                  ; no scroll, multi-color,40-cols
         sta $d016
 
@@ -208,6 +218,9 @@ nmi_irq:
         jmp @exit
 
 @is_raster:
+        lda #1
+        sta $d021
+
         lda scroll_x
         ora #%00010000                  ; set MCM on
         sta $d016
@@ -264,14 +277,18 @@ nmi_irq:
         bne @l0
 
         ; put next char in column 40
-        ldx scroll_idx
-        lda scroll_txt,x
+scroll_idx = *+1
+        lda scroll_txt
         cmp #$ff
         bne :+
 
         ; reached $ff ? Then start from the beginning
+        ldx #<scroll_txt
+        ldy #>scroll_txt
+        stx scroll_idx
+        sty scroll_idx+1
+
         lda #0
-        sta scroll_idx
         sta half_char
         lda scroll_txt
 
@@ -288,8 +305,10 @@ nmi_irq:
         bne @endscroll
 
         ; only inc scroll_idx after 2 chars are printed
-        inx
-        stx scroll_idx
+        inc scroll_idx
+        bne :+
+        inc scroll_idx+1
+:
 
 @endscroll:
         rts
