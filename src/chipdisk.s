@@ -1986,7 +1986,7 @@ song_durations:                                 ; measured in "cycles ticks"
         .word (3*60+26+1) * 50                  ; #2 3:26
         .word (3*60+13+2) * 50                  ; #3 3:13
         .word (4*60+18+1) * 50                  ; #4 4:18
-        .word (4*60+30+3) * 50                  ; #5 4:30
+        .word (4*60+29+3) * 50                  ; #5 4:29
 
 
 song_name_empty:
