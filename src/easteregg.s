@@ -100,6 +100,16 @@ SCROLL_SCREEN   = $7000 + 23 * 40
         bpl @l2
 
 
+        lda #$00                        ; clear screen (at $7000)
+        tax
+@l3:    sta $7000,x
+        sta $7100,x
+        sta $7200,x
+        sta $72e8,x
+        inx
+        bne @l3
+
+
         ; IRQ setup
 
         asl $d019                       ; ACK raster interrupt
@@ -120,16 +130,31 @@ SCROLL_SCREEN   = $7000 + 23 * 40
         sta $d01a                       ; enable raster IRQ
 
 .ifndef DEBUG
+        lda #0
+        jsr $1000                       ; init sid
+
         ldx ZP_TIMER_SPEED_LO           ; FIXME: why should I set it up again?
         ldy ZP_TIMER_SPEED_HI           ; chipdisk disk already setup it up
         stx $dc04                       ; but if I don't it plays super fast
         sty $dc05                       ; Do research
 
+        lda #$0
+        sta $dc0e                       ; stop timer interrupt A
+
+        lda #$7f                        ; turn off cia interrups
+        sta $dc0d
+
+:       lda $d012                       ; wait for raster at #$80
+:       cmp $d012                       ; and enable timer only there
+        beq :-                          ; to prevent possible flicker
+        cmp #$80
+        bne :--
+
         lda #$81
         sta $dc0d                       ; turn on CIA 1 interrups
 
-        lda #0
-        jsr $1000                       ; init sid
+        lda #$11
+        sta $dc0e                       ; start timer interrupt A
 .endif
 
         cli
@@ -196,7 +221,7 @@ nmi_irq:
         lda #>irq_text
         sta $ffff
 
-        lda #50 + (8 * 22) + 4
+        lda #50 + (8 * 22) + 2
         sta $d012
 
         inc ZP_SYNC_ANIM
@@ -221,15 +246,28 @@ nmi_irq:
         lda #1
         sta $d021
 
-        lda scroll_x
-        ora #%00010000                  ; set MCM on
-        sta $d016
+        nop                             ; HACK: unstable way to avoid flicker
+        nop                             ; while transitioning from bitmap MC
+        nop                             ; to charset MC.
+        nop                             ; There should be a better way to do it
+        nop                             ; but no time to try ATM
+        nop
+        nop
+        nop
+        nop
+        nop
+        nop
+        nop
 
-        lda #%11001010                  ; screen addr $3000, charset at $2800
+        lda #%11001010                  ; screen addr $3000 ($7000), charset at $2800 ($6800)
         sta $d018
 
         lda #%00011011                  ; bitmap mode disabled
         sta $d011
+
+        lda scroll_x
+        ora #%00010000                  ; set MCM on
+        sta $d016
 
         lda #<irq_bitmap
         sta $fffe
@@ -339,7 +377,7 @@ scroll_txt:
         scrcode "meet and share our geeky obsessions, so please stay tuned for dates and location! "
         scrcode "the song you're listening to now is uctumi's attempt at a version of the felicidade song. "
         scrcode "samba and bossa nova are really tough to get right, so this is the best he could do. "
-        scrcode "and the graphic that you're watching is alakran's homage to the great brazilian illustrator lobo. "
+        scrcode "and the graphic is alakran's homage to the great brazilian illustrator lobo. "
         scrcode "credits: code by riq, gfx by alakran, charset by arlequin and music by uctumi. "
         scrcode "greetings to our friends at garoa hacker clube of brazil from pungas de villa martelli, argentina, 2017. have a happy new year!! "
         scrcode "                                  "
