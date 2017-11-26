@@ -18,7 +18,7 @@ ZP_VIC_VIDEO_TYPE       = $60           ; byte. values:
                                         ;   $2e --> NTSC-OLD
 ZP_TIMER_SPEED_LO       = $61           ;byte: value for $dc04
 ZP_TIMER_SPEED_HI       = $62           ;byte: value for $dc05
-DEBUG = 1
+;DEBUG = 1
 
 SCROLL_SCREEN   = $7000 + 23 * 40
 
@@ -47,9 +47,9 @@ SCROLL_SCREEN   = $7000 + 23 * 40
         sta $d020
         lda #0
         sta $d021
-        lda #$03
+        lda #$05
         sta $d022
-        lda #$03
+        lda #$07
         sta $d023
 
         lda #0
@@ -93,8 +93,8 @@ SCROLL_SCREEN   = $7000 + 23 * 40
         dex
         bpl @l1
 
-        lda #$0a                        ; white (9) rows 23 & 24
-        ldx #80                         ; using 9 instead of 1 to enable multi-color mode
+        lda #14                         ; blue (14) rows 23 & 24
+        ldx #80                         ; using 14 instead of 6 to enable multi-color mode
 @l2:    sta $db70+40,x                  ; for the scroll
         dex
         bpl @l2
@@ -328,8 +328,12 @@ charset_colors:
 
 scroll_txt:
         scrcode "this is our little homage to the classics of brazilian popular music, "
-        scrcode "we're sorry we could only pick a few out of so many great songs from brazil's rich culture. "
-        scrcode "there's a lot of room for creating c64 music disks based in latin american music. "
+        scrcode "we're sorry we could only pick a few out of so many great songs from "
+        .byte 61,62                             ; brazil flag
+        scrcode " rich culture. "
+        scrcode "there's a lot of room for creating "
+        .byte 63                                ; commodore logo
+        scrcode "64 music disks based in latin american music. "
         scrcode "we at pvm want to invite you to the flash party 20 year anniversary, "
         scrcode "a demoscene event we're planning for 2018 in buenos aires. it will be a great time to "
         scrcode "meet and share our geeky obsessions, so please stay tuned for dates and location! "
