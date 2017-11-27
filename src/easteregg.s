@@ -20,7 +20,7 @@ ZP_TIMER_SPEED_LO       = $61           ;byte: value for $dc04
 ZP_TIMER_SPEED_HI       = $62           ;byte: value for $dc05
 ;DEBUG = 1
 
-SCROLL_SCREEN   = $7000 + 23 * 40
+SCROLL_SCREEN   = $6400 + 23 * 40
 
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
 ; start
@@ -88,24 +88,24 @@ SCROLL_SCREEN   = $7000 + 23 * 40
         bne @l0
 
         lda #$01                        ; white (1) row 22
-        ldx #40
+        ldx #39
 @l1:    sta $db70,x
         dex
         bpl @l1
 
         lda #14                         ; blue (14) rows 23 & 24
-        ldx #80                         ; using 14 instead of 6 to enable multi-color mode
+        ldx #79                         ; using 14 instead of 6 to enable multi-color mode
 @l2:    sta $db70+40,x                  ; for the scroll
         dex
         bpl @l2
 
 
-        lda #$00                        ; clear screen (at $7000)
+        lda #$00                        ; clear screen (at $6400)
         tax
-@l3:    sta $7000,x
-        sta $7100,x
-        sta $7200,x
-        sta $72e8,x
+@l3:    sta $6400,x
+        sta $6500,x
+        sta $6600,x
+        sta $66e8,x
         inx
         bne @l3
 
@@ -309,11 +309,11 @@ nmi_irq:
         lda #1
         sta $d021
 
-        .repeat 12
-                nop
+        .repeat 12                      ; hack: move noise to border to make it
+                nop                     ; invisible
         .endrepeat
 
-        lda #%11001010                  ; screen addr $3000 ($7000), charset at $2800 ($6800)
+        lda #%10011010                  ; screen addr $2400 ($6400), charset at $2800 ($6800)
         sta $d018
 
         lda #%00011011                  ; bitmap mode disabled
@@ -428,6 +428,9 @@ scroll_txt:
         scrcode "                                  "
         .byte $ff
 
+bitmap_color:
+        .incbin "cristo.vsf.attrib"
+
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
 .segment "BITMAP"       ; $4000
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
@@ -439,10 +442,8 @@ scroll_txt:
         .incbin "cristo.vsf.colmap"
 
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
-.segment "COLORRAM"     ; $6400
+.segment "SCREENRAM2"    ; $6400
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
-bitmap_color:
-        .incbin "cristo.vsf.attrib"
 
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
 .segment "CHARSET"      ; $6800
