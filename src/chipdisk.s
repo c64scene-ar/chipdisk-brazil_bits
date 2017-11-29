@@ -736,10 +736,10 @@ l1:
         ; sprite 5: counter
         ; sprite 6, 7: spinning casette wheels
 sprites_x_pos:
-        .byte 150, 150, 240,    128+24, 144+24, <(232+25 .MOD 255),     202, 146
+        .byte 150, 150, 240,    128+24, 144+24, <(232+25 .MOD 255),     200, 146
 
 sprites_y_pos:
-        .byte 150, 150, 218,    67+50, 75+50, 141+51,     120, 92
+        .byte 150, 150, 218,    67+50, 75+50, 141+51,     119, 92
 
 sprites_color:
         .byte 0, 1, 5,   4, 6,   14,   12, 12
@@ -1986,7 +1986,7 @@ song_durations:                                 ; measured in "cycles ticks"
         .word (3*60+26+1) * 50                  ; #2 3:26
         .word (3*60+13+2) * 50                  ; #3 3:13
         .word (4*60+18+1) * 50                  ; #4 4:18
-        .word (4*60+29+3) * 50                  ; #5 4:29
+        .word (4*60+27+3) * 50                  ; #5 4:27
 
 
 song_name_empty:
