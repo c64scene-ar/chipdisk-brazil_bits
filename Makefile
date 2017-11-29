@@ -28,6 +28,7 @@ chipdisk: ${SRC}
 	cl65 -d -g -Ln bin/$@.sym -o bin/$@.prg -t c64 -C chipdisk.cfg $^
 	exomizer mem -o bin/$@-exo.prg bin/$@.prg
 	cp bin/$@-exo.prg src/
+	# change STARTADDRESS to $801 in chipdisk.cfg
 	#cl65 -d -g -Ln bin/$@.sym -o bin/$@.prg -u __EXEHDR__ -t c64 -C chipdisk.cfg $^
 	#exomizer sfx sys -x1 -Di_line_number=1996 -o bin/$@-exo.prg bin/$@.prg
 
