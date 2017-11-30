@@ -412,15 +412,15 @@ charset_colors:
 scroll_txt:
         scrcode "this is our little homage to the classics of brazilian popular music, "
         scrcode "we're sorry we could only pick a few out of so many great songs from "
+        scrcode "the rich culture of "
         .byte 61,62                             ; brazil flag
-        scrcode " rich culture. "
-        scrcode "there's a lot of room for creating "
+        scrcode " . there's a lot of room for creating "
         .byte 63                                ; commodore logo
         scrcode "64 music disks based in latin american music. "
         scrcode "we at pvm want to invite you to the flash party 20 year anniversary, "
         scrcode "a demoscene event we're planning for 2018 in buenos aires. it will be a great time to "
         scrcode "meet and share our geeky obsessions, so please stay tuned for dates and location! "
-        scrcode "the song you're listening to now is uctumi's attempt at a version of the felicidade song. "
+        scrcode "what you're listening to now is uctumi's attempt at a version of the felicidade song. "
         scrcode "samba and bossa nova are really tough to get right, so this is the best he could do. "
         scrcode "and the graphic is alakran's homage to the great brazilian illustrator lobo. "
         scrcode "credits: code by riq, gfx by alakran, charset by arlequin and music by uctumi. "
