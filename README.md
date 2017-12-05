@@ -13,8 +13,8 @@ Recommended setup:
 
 and then do `make`
 
-        $ git clone https://github.com/c64scene-ar/chipdisk-brazil-bits.git
-        $ cd chipdisk-brazil-bits.git
+        $ git clone https://github.com/c64scene-ar/chipdisk-brazil_bits.git
+        $ cd chipdisk-brazil_bits
         $ make
 
 ## Original Tracks
